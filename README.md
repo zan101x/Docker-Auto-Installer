@@ -35,12 +35,12 @@ Un script de Bash robusto, inteligente y visual para automatizar la instalación
 
 **Usando `curl`:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/install-docker.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/zan101x/Docker-Auto-Installer/main/install-docker.sh | sudo bash
 ```
 
 **Usando `wget`:**
 ```bash
-wget -qO- https://raw.githubusercontent.com/TU_USUARIO/TU_REPO/main/install-docker.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/zan101x/Docker-Auto-Installer/main/install-docker.sh | sudo bash
 ```
 
 ---
@@ -51,8 +51,8 @@ Si prefieres descargar el script y revisarlo antes de ejecutarlo:
 
 1. **Clona el repositorio o descarga el archivo:**
    ```bash
-   git clone https://github.com/TU_USUARIO/TU_REPO.git
-   cd TU_REPO
+   git clone https://github.com/zan101x/Docker-Auto-Installer.git
+   cd Docker-Auto-Installer
    ```
 
 2. **Dale permisos de ejecución:**

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Author: Zan101
 # Version: v1
-# Description: Auto Docker Install
+# Description: Docker Auto-Installer
 
 # Salir inmediatamente si un comando falla
 set -e
@@ -75,18 +75,15 @@ else
     exit 1
 fi
 
-OS_FAMILY=""
-# Buscamos la base (ubuntu, debian, fedora, arch)
-for base in "ubuntu" "debian" "fedora" "arch"; do
-    if [[ "$ID" == "$base" || "$ID_LIKE" == *"$base"* ]]; then
-        OS_FAMILY="$base"
-        break
-    fi
-done
-
-if [ -z "$OS_FAMILY" ]; then
-    print_error "Sistema operativo no soportado: $PRETTY_NAME"
-    exit 1
+# Detección simplificada de la familia del SO
+if [[ "$ID" == "ubuntu" || "$ID_LIKE" == *"ubuntu"* || "$ID" == "anduinos" || "$ID" == "soplos" ]]; then
+    OS_FAMILY="ubuntu"
+elif [[ "$ID" == "fedora" || "$ID_LIKE" == *"fedora"* ]]; then
+    OS_FAMILY="fedora"
+elif [[ "$ID" == "arch" || "$ID_LIKE" == *"arch"* ]]; then
+    OS_FAMILY="arch"
+else
+    OS_FAMILY="debian"
 fi
 
 print_success "Sistema detectado: $PRETTY_NAME (Base $OS_FAMILY)"
@@ -132,38 +129,22 @@ if [[ "$OS_FAMILY" == "ubuntu" || "$OS_FAMILY" == "debian" ]]; then
     chmod a+r /etc/apt/keyrings/docker.asc
     
     print_step "${ICON_SHIELD} Configurando repositorio oficial..."
-    # Detectar el codename upstream real, independiente del nombre de la distro
-    CODENAME=""
-
+    # Detección simplificada del Codename
     if [[ "$OS_FAMILY" == "ubuntu" ]]; then
-        # UBUNTU_CODENAME es la variable canónica que las derivadas de Ubuntu incluyen
         CODENAME=${UBUNTU_CODENAME:-$VERSION_CODENAME}
-    elif [[ "$OS_FAMILY" == "debian" ]]; then
-        # /etc/debian_version tiene SIEMPRE la versión upstream, en dos formatos posibles:
-        #   - Numérico: "12.5"     → extraemos "12" → "bookworm"
-        #   - Codename: "bookworm/sid" → extraemos "bookworm"
-        DV=$(cat /etc/debian_version 2>/dev/null || echo "")
-        if [[ "$DV" =~ ^[0-9] ]]; then
-            # Formato numérico
-            case "${DV%%.*}" in
-                13) CODENAME="trixie" ;;
-                12) CODENAME="bookworm" ;;
-                11) CODENAME="bullseye" ;;
-                10) CODENAME="buster" ;;
-                 9) CODENAME="stretch" ;;
-            esac
-        else
-            # Formato codename (ej: "bookworm/sid" → "bookworm")
-            CODENAME="${DV%%/*}"
+        # Si el codename es el nombre de la distro, usamos un fallback de Ubuntu estable
+        if [[ "$CODENAME" == "anduinos" || "$CODENAME" == "soplos" ]]; then
+            CODENAME="noble"
+        fi
+    else
+        CODENAME=$VERSION_CODENAME
+        # Si es Debian testing/unstable (forky/sid), usamos bookworm
+        if [[ "$CODENAME" == "forky" || "$CODENAME" == "sid" ]]; then
+            CODENAME="bookworm"
         fi
     fi
 
-    if [ -z "$CODENAME" ] || [[ ! "$CODENAME" =~ ^[a-z] ]]; then
-        print_error "No se pudo determinar el codename upstream del repositorio. Codename detectado: '$CODENAME'"
-        exit 1
-    fi
-
-    print_info "Usando codename del repositorio: $CODENAME"
+    print_info "Configurando repositorio Docker para $OS_FAMILY ($CODENAME)..."
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/$OS_FAMILY \
       $CODENAME stable" | \
